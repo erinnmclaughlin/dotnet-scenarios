@@ -1,24 +1,57 @@
 ﻿@page "/account"
 @attribute [Authorize]
+@inject ApiClient ApiClient
+
+<PageTitle>Account</PageTitle>
 
 <h1>My Account</h1>
 
-<AuthorizeView>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Claim Type</th>
-            <th>Value</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var claim in context.User.Claims)
-        {
-            <tr class="font-monospace">
-                <td>@claim.Type</td>
-                <td>@claim.Value</td>
-            </tr>
+@if (UserClaims is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <AuthorizeView>
+        @{
+            var claimTypes = context.User.Claims
+                .Select(x => x.Type)
+                .Concat(UserClaims.Select(x => x.Type))
+                .ToHashSet();
+            
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Claim Type</th>
+                    <th>Value (From API)</th>
+                    <th>Value (From Client App)</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var claimType in claimTypes.OrderBy(x => x))
+                {
+                    var apiClaim = string.Join(", ", UserClaims.Where(x => x.Type == claimType).Select(x => x.Value));
+                    var b2cClaim = string.Join(", ", context.User.Claims.Where(x => x.Type == claimType).Select(x => x.Value));
+                    
+                    <tr class="font-monospace @(apiClaim == b2cClaim ? "" : "table-warning")">
+                        <td>@claimType</td>
+                        <td>@apiClaim</td>
+                        <td>@b2cClaim </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
         }
-        </tbody>
-    </table>
-</AuthorizeView>
+    </AuthorizeView>
+}
+
+@code {
+
+    private UserClaim[]? UserClaims { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserClaims = await ApiClient.GetClaims();
+    }
+    
+}

@@ -1,45 +1,6 @@
 ﻿@page "/"
-@inject ApiClient ApiClient
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 <PageTitle>Home</PageTitle>
 
-@if (!string.IsNullOrEmpty(Error))
-{
-    <div class="alert alert-danger" role="alert">
-        @Error
-    </div>
-}
-
-@if (Greeting is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <h1>@Greeting</h1>
-    <p>Welcome to your new app.</p>
-}
-
-@code {
-
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthStateTask { get; set; } = null!;
-
-    private string? Greeting { get; set; }
-    private string? Error { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateTask;
-
-        if (authState.User.Identity is { IsAuthenticated: true })
-        {
-            Greeting = await ApiClient.GetSecureGreeting();
-        }
-        else
-        {
-            Greeting = "Hello!";
-        }
-    }
-}
+<h1>Hello, world!</h1>
+<p>Welcome to your new app.</p>

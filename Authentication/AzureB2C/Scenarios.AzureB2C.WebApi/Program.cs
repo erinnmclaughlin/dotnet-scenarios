@@ -8,7 +8,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(o =>
     {
         builder.Configuration.Bind("AzureAdB2C", o);
+        o.MapInboundClaims = false;
         o.TokenValidationParameters.NameClaimType = "name";
+
     }, o => builder.Configuration.Bind("AzureAdB2C", o));
 
 builder.Services.AddCors();
@@ -37,7 +39,6 @@ app.UseCors(o =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("greeting", () => "Hello!");
-app.MapGet("greeting-secure", (ClaimsPrincipal user) => $"Hello, {user.Identity?.Name}!").RequireAuthorization();
+app.MapGet("claims", (ClaimsPrincipal user) => user.Claims.Select(c => new { c.Type, c.Value })).RequireAuthorization();
 
 app.Run();
