@@ -1,0 +1,24 @@
+﻿@page "/account"
+@attribute [Authorize]
+
+<h1>My Account</h1>
+
+<AuthorizeView>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Claim Type</th>
+            <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var claim in context.User.Claims)
+        {
+            <tr class="font-monospace">
+                <td>@claim.Type</td>
+                <td>@claim.Value</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</AuthorizeView>
