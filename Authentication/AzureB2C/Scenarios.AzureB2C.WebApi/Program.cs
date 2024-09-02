@@ -1,10 +1,15 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
+using Scenarios.AzureB2C.WebApi.Database;
+using Scenarios.AzureB2C.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// Configure authentication with Azure B2C:
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(o =>
     {
         builder.Configuration.Bind("AzureAdB2C", o);
@@ -13,8 +18,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
     }, o => builder.Configuration.Bind("AzureAdB2C", o));
 
+// Configure the database:
+var connectionString = builder.Configuration.GetConnectionString("ApplicationDb");
+builder.Services.AddDbContextFactory<ApplicationDbContext>(o => o.UseSqlServer(connectionString));
+
+// Configure MS Identity:
+builder.Services.AddScoped<UserPersistenceMiddleware>();
+
+// Enable CORS:
 builder.Services.AddCors();
 
+// Configure Swagger:
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -38,6 +52,8 @@ app.UseCors(o =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<UserPersistenceMiddleware>();
 
 app.MapGet("claims", (ClaimsPrincipal user) => user.Claims.Select(c => new { c.Type, c.Value })).RequireAuthorization();
 
